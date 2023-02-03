@@ -12,6 +12,6 @@ use with workload generator:
 generator here: https://github.com/nehavadnere/CSE546_Sum22_workload_generator
 
 Tasks:
-[] Implement code to push to sqs
-[] Implement code to poll from sqs
-[] Implement code to write to s3
+- [ ] Implement code to push to sqs
+- [ ] Implement code to poll from sqs
+- [ ] Implement code to write to s3
