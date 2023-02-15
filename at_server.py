@@ -26,9 +26,12 @@ class AppWorker:
 
 
         self.app = Flask(__name__)
-        self.app.add_url_rule("/", "classify", self.classify, methods=["GET","POST"])
+        self.app.add_url_rule("/", "index", self.index, methods=["GET","POST"])
+        self.app.add_url_rule("/classify", "classify", self.classify, methods=["GET","POST"])
 
-
+    def index(self):
+        return "Hello World"
+    
     def classify(self):
         file = request.files
         key = list(file.keys())[0]
@@ -69,5 +72,5 @@ if __name__ == "__main__":
     config.read('at_config.ini')
 
     worker = AppWorker(config=config)
-    worker.app.run(debug=True, host=config.get("flask", "host"), port=int(config.get("flask", "port")))
+    worker.app.run(host=config.get("flask", "host"), port=int(config.get("flask", "port")))
     
