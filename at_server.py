@@ -16,6 +16,8 @@ from utils import *
 import boto3
 import botocore
 from configparser import ConfigParser
+import boto3
+from threading import Thread
 
 class AppWorker:
 
@@ -27,9 +29,8 @@ class AppWorker:
         with open(config.get('local', 'labels')) as f:
             self.labels = json.load(f)
 
-
-
         self.app = Flask(__name__)
+        
         self.app.add_url_rule("/", "index", self.index, methods=["GET","POST"])
         self.app.add_url_rule("/classify", "classify", self.classify, methods=["GET","POST"])
         client_config=botocore.config.Config(
@@ -39,8 +40,13 @@ class AppWorker:
         self.input_bucket = config.get('s3', 'input_bucket')
         self.output_bucket = config.get('s3', 'output_bucket')
 
+        sqs = boto3.resource('sqs')
+        self.requestQueue = sqs.get_queue_by_name(QueueName=config.get('remote','requestQueue'))
+        self.responseQueue = sqs.get_queue_by_name(QueueName=config.get('remote','responseQueue'))
+
     def index(self):
         return "Hello World"
+<<<<<<< Updated upstream
     
     def classify(self):
         req = request.json
@@ -63,12 +69,35 @@ class AppWorker:
         outputs = self.model(img_tensor)
         _, predicted = torch.max(outputs.data, 1)
         return self.labels[np.array(predicted)[0]]
+    
+    def poll_msgq(self) -> None:
+        try:
+            for message in self.requestQueue.receive_messages(WaitTimeSeconds=5):
+                if message.Data is not None:
+                    print(message.Data)
+                    self.classify(message.Data)
+                    message.delete()
+        except Exception as e: 
+            print(f'Error: {str(e)}')
 
+
+
+    def write_to_s3(self, result) -> None:
+        pass
+
+    # Write the result to response queue
+    def write_to_respq(self, result) -> None:
+        try:
+            self.responseQueue.send_message(MessageBody=result)
+        except Exception as e:
+            print(f'Error: {str(e)}')
 
 if __name__ == "__main__":
     config = ConfigParser()
     config.read('at_config.ini')
 
     worker = AppWorker(config=config)
+    t = Thread(target=worker.poll_msgq)
+    t.start()
     worker.app.run(host=config.get("flask", "host"), port=int(config.get("flask", "port")))
     

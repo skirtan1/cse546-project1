@@ -7,6 +7,9 @@ from utils import *
 import boto3
 import io
 import botocore
+import boto3
+import base64
+from threading import Thread
 
 class WebWorker:
 
@@ -23,6 +26,10 @@ class WebWorker:
         self.s3 = boto3.client('s3', config=client_config)
         self.input_bucket = config.get('s3', 'input_bucket')
 
+        sqs = boto3.resource('sqs')
+        self.requestQueue = sqs.get_queue_by_name(QueueName=config.get('remote','requestQueue'))
+        self.responseQueue = sqs.get_queue_by_name(QueueName=config.get('remote','responseQueue'))
+
     def index(self):
         return "Hello World"
     
@@ -38,6 +45,26 @@ class WebWorker:
             "Key": 1
         })
         return resp.text
+
+    def write_to_s3(self, file) -> str:
+        # upload image to s3
+        return 'https://dummyS3Url'
+    
+    def write_to_msgq(self, message) -> None:
+        try:
+            self.requestQueue.send_message(MessageBody=message)
+        except Exception as e:
+            print(f'Error: {str(e)}')
+
+    def poll_resp_q(self) -> str:
+        try:
+            for message in self.responseQueue.receive_messages(WaitTimeSeconds=5):
+                if message.Data is not None:
+                    print(message.Data)
+                    message.delete()
+                    return message.Data
+        except Exception as e: 
+            print(f'Error: {str(e)}')
 
 if __name__ == "__main__":
     config = ConfigParser()
