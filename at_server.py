@@ -10,7 +10,11 @@ from PIL import Image
 import numpy as np
 import json
 import sys
+import io
 import time
+from utils import *
+import boto3
+import botocore
 from configparser import ConfigParser
 
 class AppWorker:
@@ -28,24 +32,29 @@ class AppWorker:
         self.app = Flask(__name__)
         self.app.add_url_rule("/", "index", self.index, methods=["GET","POST"])
         self.app.add_url_rule("/classify", "classify", self.classify, methods=["GET","POST"])
+        client_config=botocore.config.Config(
+            max_pool_connections=int(config.get('boto', 'max_pool_connections'))
+        )
+        self.s3 = boto3.client('s3', config=client_config)
+        self.input_bucket = config.get('s3', 'input_bucket')
+        self.output_bucket = config.get('s3', 'output_bucket')
 
     def index(self):
         return "Hello World"
     
     def classify(self):
-        file = request.files
-        key = list(file.keys())[0]
-        val = file.get(key)
-        print(val)
-        result = self.evaluate(Image.open(val))
+        req = request.json
+        filename = req.get('filename')
         
-        #writing to s3
-        self.write_to_s3({key: val})
+        data = safe_download(client=self.s3, bucket=self.input_bucket, key=filename)
+        result = self.evaluate(Image.open(data))
 
-        #write_to_respq
-        self.write_to_respq({key: val})
-
-        response = make_response(result, 200)
+        key = filename.split('.')[0]
+        result_data = io.BytesIO()
+        result_data.write(bytes("({},{})".format(key,result).encode('utf-8')))
+        safe_upload(client=self.s3, bucket=self.output_bucket,
+                    key=key+".txt", data=result_data, content_type="text/plain")
+        response = make_response("({}:{})".format(filename, result), 200)
         response.mimetype = "text/plain"
         return response
 
@@ -54,17 +63,6 @@ class AppWorker:
         outputs = self.model(img_tensor)
         _, predicted = torch.max(outputs.data, 1)
         return self.labels[np.array(predicted)[0]]
-    
-    def poll_msgq(self) -> None:
-    # Write the result to s3
-        pass
-
-    def write_to_s3(self, result) -> None:
-        pass
-
-    # Write the result to response queue
-    def write_to_respq(self, result) -> None:
-        pass
 
 
 if __name__ == "__main__":
