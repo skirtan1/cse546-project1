@@ -9,12 +9,16 @@ import io
 import botocore
 import boto3
 import base64
-from threading import Thread
+from uuid import uuid4
+import concurrent.futures
+import time
 
 class WebWorker:
 
     def __init__(self, config) -> None:
         self.app = Flask(__name__)
+        self.app.config['SERVER_TIMEOUT'] = 120
+        self.app.config['TIMEOUT'] = 120
 
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
         self.app.add_url_rule("/", "index", self.index, methods=["GET", "POST"])
@@ -27,8 +31,11 @@ class WebWorker:
         self.input_bucket = config.get('s3', 'input_bucket')
 
         sqs = boto3.resource('sqs')
-        self.requestQueue = sqs.get_queue_by_name(QueueName=config.get('remote','requestQueue'))
-        self.responseQueue = sqs.get_queue_by_name(QueueName=config.get('remote','responseQueue'))
+        self.requestQueue = sqs.get_queue_by_name(QueueName=config.get('sqs','request_queue'))
+        self.responseQueue = sqs.get_queue_by_name(QueueName=config.get('sqs','response_queue'))
+
+        self.queue_url = config.get('sqs','response_queue_url')
+        self.sqsClient = boto3.client('sqs')
 
     def index(self):
         return "Hello World"
@@ -37,34 +44,73 @@ class WebWorker:
         file = request.files.get('myfile')
         mfile = io.BytesIO()
         filename = file.filename
+        print(f'got classify request for {filename}')
         mfile.write(file.read())
         safe_upload(client=self.s3, bucket=self.input_bucket,
                     key=filename, data=mfile, content_type="image/png")
-        resp = requests.post(url=self.remote_url, json={
-            "filename": filename,
-            "Key": 1
-        })
-        return resp.text
+        #resp = requests.post(url=self.remote_url, json={
+        #    "filename": filename,
+        #    "Key": 1
+        #})
+        messageId = self.write_to_msgq(filename)
+        print(f'messageid: {messageId}')
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            print('start polling resp queue for result')
+            future = executor.submit(poll_resp_q, messageId, self.queue_url, self.sqsClient)
+            result = future.result()
+            print(result)
+        return result
 
-    def write_to_s3(self, file) -> str:
-        # upload image to s3
-        return 'https://dummyS3Url'
-    
-    def write_to_msgq(self, message) -> None:
+    def write_to_msgq(self, message) -> str:
         try:
-            self.requestQueue.send_message(MessageBody=message)
+            response = self.requestQueue.send_message(MessageBody=message)
+            print(f'wrote message: {message} to request queue')
+            return response['MessageId']
         except Exception as e:
             print(f'Error: {str(e)}')
 
-    def poll_resp_q(self) -> str:
-        try:
-            for message in self.responseQueue.receive_messages(WaitTimeSeconds=5):
-                if message.Data is not None:
-                    print(message.Data)
-                    message.delete()
-                    return message.Data
-        except Exception as e: 
-            print(f'Error: {str(e)}')
+def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
+    print('bruhh')
+    print(queue_url)
+    print(messageId)
+    try:
+        while True:
+            response = sqsClient.receive_message(
+                QueueUrl=queue_url,
+                AttributeNames=[
+                    'SentTimestamp'
+                ],
+                MessageAttributeNames=[
+                    'All'
+                ],
+                VisibilityTimeout=0,
+                WaitTimeSeconds=0
+            )
+            print(response)
+
+            if 'Messages' not in response:
+                print('no messages found in resp queue')
+                time.sleep(10)
+                continue
+
+            for message in response['Messages']:
+                if 'MessageAttributes' in message:
+                    messageAttr = message['MessageAttributes']
+                    if messageAttr['messageId']['StringValue'] == messageId:
+                        print('message found')
+                        receipt_handle = message['ReceiptHandle']
+                        result = message['Body']
+                        sqsClient.delete_message(
+                            QueueUrl=queue_url,
+                            ReceiptHandle=receipt_handle
+                        )
+                        return result
+            time.sleep(10)
+
+
+    except Exception as e: 
+        return f'Error: {str(e)}'
+
 
 if __name__ == "__main__":
     config = ConfigParser()
