@@ -44,7 +44,6 @@ class WebWorker:
         file = request.files.get('myfile')
         mfile = io.BytesIO()
         filename = file.filename
-        print(f'got classify request for {filename}')
         mfile.write(file.read())
         safe_upload(client=self.s3, bucket=self.input_bucket,
                     key=filename, data=mfile, content_type="image/png")
@@ -53,26 +52,19 @@ class WebWorker:
         #    "Key": 1
         #})
         messageId = self.write_to_msgq(filename)
-        print(f'messageid: {messageId}')
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            print('start polling resp queue for result')
             future = executor.submit(poll_resp_q, messageId, self.queue_url, self.sqsClient)
             result = future.result()
-            print(result)
         return result
 
     def write_to_msgq(self, message) -> str:
         try:
             response = self.requestQueue.send_message(MessageBody=message)
-            print(f'wrote message: {message} to request queue')
             return response['MessageId']
         except Exception as e:
             print(f'Error: {str(e)}')
 
 def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
-    print('bruhh')
-    print(queue_url)
-    print(messageId)
     try:
         while True:
             response = sqsClient.receive_message(
@@ -86,10 +78,8 @@ def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
                 VisibilityTimeout=0,
                 WaitTimeSeconds=0
             )
-            print(response)
 
             if 'Messages' not in response:
-                print('no messages found in resp queue')
                 time.sleep(10)
                 continue
 
@@ -97,7 +87,6 @@ def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
                 if 'MessageAttributes' in message:
                     messageAttr = message['MessageAttributes']
                     if messageAttr['messageId']['StringValue'] == messageId:
-                        print('message found')
                         receipt_handle = message['ReceiptHandle']
                         result = message['Body']
                         sqsClient.delete_message(

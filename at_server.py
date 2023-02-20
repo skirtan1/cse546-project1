@@ -50,7 +50,6 @@ class AppWorker:
     def classify(self, filename, messageId) -> None:
         #req = request.json
         #filename = req.get('filename')
-        print('classify function called') 
         data = safe_download(client=self.s3, bucket=self.input_bucket, key=filename)
         try:
             result = self.evaluate(Image.open(data))
@@ -84,12 +83,10 @@ class AppWorker:
                     } 
                 }
             )
-            print(f'wrote message: {result} to response queue')
         except Exception as e:
             print(f'Error: {str(e)}')
     
 def poll_msgq(sqsClient, queue_url, worker: AppWorker) -> None:
-    print('start polling')
     while True:
         try:
             response = sqsClient.receive_message(
@@ -106,7 +103,6 @@ def poll_msgq(sqsClient, queue_url, worker: AppWorker) -> None:
             )
 
             if 'Messages' not in response:
-                print('no messages found in req queue')
                 time.sleep(10)
                 continue
 
@@ -118,10 +114,8 @@ def poll_msgq(sqsClient, queue_url, worker: AppWorker) -> None:
                 ReceiptHandle=receipt_handle
             )
 
-            print('Received and deleted message: %s' % message)
             messageBody = message['Body']
             messageId = message['MessageId']
-            print(f'messageid: {messageId}')
             worker.classify(messageBody, messageId)
 
         except Exception as e: 
