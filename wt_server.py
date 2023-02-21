@@ -35,7 +35,7 @@ class WebWorker:
         self.responseQueue = sqs.get_queue_by_name(QueueName=config.get('sqs','response_queue'))
 
         self.queue_url = config.get('sqs','response_queue_url')
-        self.sqsClient = boto3.client('sqs')
+        self.sqsClient = boto3.client('sqs', config=client_config)
 
     def index(self):
         return "Hello World"
@@ -68,6 +68,7 @@ class WebWorker:
 
 def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
     try:
+        logging.info("Starting to poll response queue, msgId: {}".format(messageId))
         while True:
             response = sqsClient.receive_message(
                 QueueUrl=queue_url,
@@ -82,7 +83,8 @@ def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
             )
 
             if 'Messages' not in response:
-                time.sleep(10)
+                logging.info("Empty Response received from response queue")
+                time.sleep(5)
                 continue
 
             for message in response['Messages']:
@@ -96,7 +98,7 @@ def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
                             ReceiptHandle=receipt_handle
                         )
                         return result
-            time.sleep(10)
+            time.sleep(2)
 
 
     except Exception as e: 

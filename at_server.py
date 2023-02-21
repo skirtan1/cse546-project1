@@ -6,7 +6,6 @@ import torchvision.models as models
 from PIL import Image
 import numpy as np
 import json
-import sys
 import io
 import time
 from utils import *
@@ -39,6 +38,7 @@ class AppWorker:
         sqs = boto3.resource('sqs')
         self.requestQueue = sqs.get_queue_by_name(QueueName=config.get('sqs','request_queue'))
         self.responseQueue = sqs.get_queue_by_name(QueueName=config.get('sqs','response_queue'))
+        self.count=0
 
     def index(self):
         return "Hello World"
@@ -47,6 +47,7 @@ class AppWorker:
         #req = request.json
         #filename = req.get('filename')
         logging.info("Classifying image: {}, msgID: {}".format(filename, messageId))
+        self.count += 1
         data = safe_download(client=self.s3, bucket=self.input_bucket, key=filename)
         try:
             result = self.evaluate(Image.open(data))
@@ -65,6 +66,7 @@ class AppWorker:
         response = "({}:{})".format(filename, result)
         logging.info("Writing {} to response queue".format(response))
         self.write_to_respq(response, messageId)
+        logging.info("Serviced {}th request".format(self.count))
 
     def evaluate(self, img):
         img_tensor = transforms.ToTensor()(img).unsqueeze_(0)
