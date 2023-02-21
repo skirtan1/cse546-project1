@@ -14,7 +14,7 @@ run_wt: wt_server
 run_at: at_server
 	docker rm -f at_server 2> /dev/null || true
 	docker run -d  -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-    -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} --name at_server at_server:latest
+    -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} --restart always --name at_server at_server:latest
 
 clean_containers:
 	@echo "Warning: This will delete all docker containers"
