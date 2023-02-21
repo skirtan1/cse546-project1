@@ -13,17 +13,16 @@ def safe_upload(client, bucket, key, data, content_type=""):
     :return: True if operation successfull
     :rtype: bool
     """
-    logger = logging.getLogger('global')
     try:
         client.put_object(Bucket=bucket, Body=data.getvalue(), Key=key, Metadata={"Content-Type": content_type})
-        logger.info("Uploaded obj {}\
+        logging.info("Uploaded obj {}\
                      to s3 bucket {}\
                     ".format(
                         key, bucket
                     ))
         return True
     except Exception as e:
-        logger.error("Caught exeception {}\
+        logging.error("Caught exeception {}\
                      while uploading obj {} to\
                      s3 bucket: {}".format(
                      e, key, bucket
@@ -40,11 +39,10 @@ def safe_download(client, bucket, key):
     :return: binary file data if successfull else None
     :rtype: io.BytesIO
     """
-    logger = logging.getLogger('global')
     data = io.BytesIO()
     try:
         client.download_fileobj(Bucket=bucket, Key=key, Fileobj=data)
-        logger.info("Download obj {}\
+        logging.info("Download obj {}\
                      from s3 bucket {}\
                      ".format(
                         key, bucket

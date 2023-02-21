@@ -1,7 +1,4 @@
-import os
-#from flask import Flask, request, make_response
 import torch
-import torchvision
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,7 +11,6 @@ import io
 import time
 from utils import *
 import boto3
-import botocore
 from configparser import ConfigParser
 import boto3
 from threading import Thread
@@ -33,10 +29,10 @@ class AppWorker:
         
         #self.app.add_url_rule("/", "index", self.index, methods=["GET","POST"])
         #self.app.add_url_rule("/classify", "classify", self.classify, methods=["GET","POST"])
-        client_config=botocore.config.Config(
-            max_pool_connections=int(config.get('boto', 'max_pool_connections'))
-        )
-        self.s3 = boto3.client('s3', config=client_config)
+        # client_config=botocore.config.Config(
+        #     max_pool_connections=int(config.get('boto', 'max_pool_connections'))
+        # )
+        self.s3 = boto3.client('s3')
         self.input_bucket = config.get('s3', 'input_bucket')
         self.output_bucket = config.get('s3', 'output_bucket')
 
@@ -50,20 +46,24 @@ class AppWorker:
     def classify(self, filename, messageId) -> None:
         #req = request.json
         #filename = req.get('filename')
+        logging.info("Classifying image: {}, msgID: {}".format(filename, messageId))
         data = safe_download(client=self.s3, bucket=self.input_bucket, key=filename)
         try:
             result = self.evaluate(Image.open(data))
         except Exception as e:
+            logging.error("Exception occured: {}, img: {}, msgID: {}".format(e, filename, messageId))
             result = str(e)
 
         key = filename.split('.')[0]
         result_data = io.BytesIO()
         result_data.write(bytes("({},{})".format(key,result).encode('utf-8')))
+        logging.info("Uploading result: {} to s3 bucket: {}".format(result_data, self.output_bucket))
         safe_upload(client=self.s3, bucket=self.output_bucket,
                     key=key+".txt", data=result_data, content_type="text/plain")
         #response = make_response("({}:{})".format(filename, result), 200)
         #response.mimetype = "text/plain"
         response = "({}:{})".format(filename, result)
+        logging.info("Writing {} to response queue".format(response))
         self.write_to_respq(response, messageId)
 
     def evaluate(self, img):
@@ -103,20 +103,21 @@ def poll_msgq(sqsClient, queue_url, worker: AppWorker) -> None:
             )
 
             if 'Messages' not in response:
+                logging.debug("Empty response received from queue")
                 time.sleep(10)
                 continue
 
             message = response['Messages'][0]
             receipt_handle = message['ReceiptHandle']
 
+            messageBody = message['Body']
+            messageId = message['MessageId']
+            worker.classify(messageBody, messageId)
+
             sqsClient.delete_message(
                 QueueUrl=queue_url,
                 ReceiptHandle=receipt_handle
             )
-
-            messageBody = message['Body']
-            messageId = message['MessageId']
-            worker.classify(messageBody, messageId)
 
         except Exception as e: 
             print(f'Error: {str(e)}')
@@ -126,6 +127,10 @@ if __name__ == "__main__":
     config = ConfigParser()
     config.read('at_config.ini')
 
+    logging.basicConfig(format='%(asctime)s %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p',
+                        level=int(config.get('logging', 'level')))
+
     queue_url = config.get('sqs','request_queue_url')
     sqsClient = boto3.client('sqs')
 
@@ -133,5 +138,7 @@ if __name__ == "__main__":
     #with worker.app.app_context():
     t = Thread(target=poll_msgq, args=(sqsClient, queue_url, worker))
     t.start()
+
+    t.join()
     #worker.app.run(host=config.get("flask", "host"), port=int(config.get("flask", "port")))
     

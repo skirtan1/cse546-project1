@@ -51,6 +51,7 @@ class WebWorker:
         #    "filename": filename,
         #    "Key": 1
         #})
+        logging.info("Sending msg to request queue: {}".format(filename))
         messageId = self.write_to_msgq(filename)
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(poll_resp_q, messageId, self.queue_url, self.sqsClient)
@@ -60,6 +61,7 @@ class WebWorker:
     def write_to_msgq(self, message) -> str:
         try:
             response = self.requestQueue.send_message(MessageBody=message)
+            logging.info("Got response: {} for msg: {} from request queue".format(response, message))
             return response['MessageId']
         except Exception as e:
             print(f'Error: {str(e)}')
@@ -105,6 +107,9 @@ if __name__ == "__main__":
     config = ConfigParser()
     config.read('wt_config.ini')
 
+    logging.basicConfig(format='%(asctime)s %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p',
+                        level=int(config.get('logging', 'level')))
     worker = WebWorker(config=config)
     host=config.get('flask', 'host')
     port=int(config.get('flask', 'port'))
