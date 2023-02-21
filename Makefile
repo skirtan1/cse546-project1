@@ -8,11 +8,11 @@ wt_server: wt_server.py wt_requirements.txt	wt_config.ini wt_dockerfile
 	docker save -o wt_server wt_server:latest
 
 run_wt: wt_server
-	docker rm wt_server
+	docker rm -f wt_server 2> /dev/null || true
 	docker run -d -p 80:5000  -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} --name wt_server wt_server:latest
 
 run_at: at_server
-	docker rm at_server
+	docker rm -f at_server 2> /dev/null || true
 	docker run -d  -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} --name at_server at_server:latest
 

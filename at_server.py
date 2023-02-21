@@ -100,7 +100,7 @@ def poll_msgq(sqsClient, queue_url, worker: AppWorker) -> None:
                 MessageAttributeNames=[
                     'All'
                 ],
-                VisibilityTimeout=60,
+                VisibilityTimeout=30,
                 WaitTimeSeconds=0
             )
 
