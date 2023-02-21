@@ -59,6 +59,7 @@ class AppWorker:
         result_data = io.BytesIO()
         result_data.write(bytes("({},{})".format(key,result).encode('utf-8')))
         logging.info("Uploading result: {} to s3 bucket: {}".format(result_data, self.output_bucket))
+        time.sleep(15)
         safe_upload(client=self.s3, bucket=self.output_bucket,
                     key=key+".txt", data=result_data, content_type="text/plain")
         #response = make_response("({}:{})".format(filename, result), 200)
