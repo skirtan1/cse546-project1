@@ -38,8 +38,6 @@ class WebWorker:
         self.requestQueue = sqs.get_queue_by_name(QueueName=config.get('sqs','request_queue'))
         self.responseQueue = sqs.get_queue_by_name(QueueName=config.get('sqs','response_queue'))
 
-        #self.queue_url = config.get('sqs','response_queue_url')
-        #self.sqsClient = boto3.client('sqs', config=client_config)
         self.queue_url = queue_url
         self.sqsClient = sqsClient
 
@@ -59,7 +57,7 @@ class WebWorker:
             result = getMessageById(messageId, self.queue_url, self.sqsClient)
             if result != 'None':
                 break
-            time.sleep(2)
+            time.sleep(2) #timeout for debugging
         return result
 
     def write_to_msgq(self, message) -> str:
@@ -117,7 +115,7 @@ def poll_resp_q(queue_url: str, sqsClient) -> str:
                             'result': message['Body'],
                             'receipt_handle' : message['ReceiptHandle']
                         }
-            time.sleep(10)
+            time.sleep(3)
 
 
     except Exception as e: 
@@ -139,8 +137,6 @@ if __name__ == "__main__":
                         level=int(config.get('logging', 'level')))
     worker = WebWorker(config=config, queue_url=queue_url, sqsClient=sqsClient)
 
-    #with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-    #    future = executor.submit(poll_resp_q, queue_url, sqsClient)
     t = threading.Thread(target=poll_resp_q, args=(queue_url, sqsClient))
     t.start()
 
