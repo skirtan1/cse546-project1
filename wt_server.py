@@ -143,4 +143,5 @@ if __name__ == "__main__":
     host=config.get('flask', 'host')
     port=int(config.get('flask', 'port'))
     worker.app.run(host, port)
+    t.join()
     
