@@ -84,7 +84,7 @@ def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
 
             if 'Messages' not in response:
                 logging.info("Empty Response received from response queue")
-                time.sleep(10)
+                time.sleep(3)
                 continue
 
             for message in response['Messages']:
@@ -98,7 +98,7 @@ def poll_resp_q(messageId:str, queue_url: str, sqsClient) -> str:
                             ReceiptHandle=receipt_handle
                         )
                         return result
-            time.sleep(10)
+            time.sleep(3)
 
 
     except Exception as e: 
