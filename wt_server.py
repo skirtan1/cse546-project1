@@ -117,7 +117,7 @@ def poll_resp_q(queue_url: str, sqsClient) -> str:
                         'result': message['Body'],
                         'receipt_handle' : message['ReceiptHandle']
                     }
-            lock.release_read()
+            lock.release_write()
             time.sleep(3)
 
 
