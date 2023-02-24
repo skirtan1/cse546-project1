@@ -1,14 +1,14 @@
 [Unit]
 Description=Service to push custom metrics to CloudWatch
-ConditionPathExists=/home/ubuntu/cse546_project1/metricspush.py
+ConditionPathExists=/home/ubuntu/cse546-project1/metricspush.py
 After=network.target
 Wants=metrics.timer
 
 [Service]
 User=ubuntu
 Group=ubuntu
-WorkingDirectory=/home/ubuntu/cse546_project1
-ExecStart=/home/ubuntu/cse546_project1/metricspush.py
+WorkingDirectory=/home/ubuntu/cse546-project1
+ExecStart=/home/ubuntu/cse546-project1/metricspush.py
 PermissionsStartOnly=true
 Environment=AWS_DEFAULT_REGION=us-east-1
 ExecStartPre=/bin/mkdir -p /var/log/metricsservice
