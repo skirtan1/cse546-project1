@@ -106,11 +106,11 @@ def poll_resp_q(queue_url: str, sqsClient) -> str:
 
             global resultQueue
 
-            for message in response['Messages']:
-                if 'MessageAttributes' in message:
-                    messageAttr = message['MessageAttributes']
-                    messageId = messageAttr['messageId']['StringValue']
-                    with writeLock:
+            with writeLock:
+                for message in response['Messages']:
+                    if 'MessageAttributes' in message:
+                        messageAttr = message['MessageAttributes']
+                        messageId = messageAttr['messageId']['StringValue']
                         resultQueue[messageId] = {
                             'result': message['Body'],
                             'receipt_handle' : message['ReceiptHandle']
