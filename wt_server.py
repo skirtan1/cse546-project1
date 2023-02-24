@@ -58,7 +58,7 @@ class WebWorker:
             result = getMessageById(messageId, self.queue_url, self.sqsClient)
             if result != 'None':
                 break
-            time.sleep(2) #timeout for debugging
+            time.sleep(1/10)
         return result
 
     def write_to_msgq(self, message) -> str:
@@ -98,7 +98,8 @@ def poll_resp_q(queue_url: str, sqsClient) -> str:
                     'All'
                 ],
                 VisibilityTimeout=180,
-                WaitTimeSeconds=0
+                WaitTimeSeconds=0,
+                MaxNumberOfMessages=10,
             )
 
             if 'Messages' not in response:
