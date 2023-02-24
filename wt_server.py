@@ -13,9 +13,10 @@ from uuid import uuid4
 import concurrent.futures
 import time
 import threading
+from RWLock import *
 
 resultQueue = dict()
-writeLock = threading.Lock()
+lock = ReadWriteLock()
 
 class WebWorker:
 
@@ -70,17 +71,18 @@ class WebWorker:
 
 def getMessageById(messageId:str, queue_url, sqsClient) -> str:
     global resultQueue
-    with writeLock:
-        if messageId in resultQueue:
-            message = resultQueue[messageId]
-            sqsClient.delete_message(
-                QueueUrl=queue_url,
-                ReceiptHandle=message['receipt_handle']
-            )
-            del resultQueue[messageId]
-        else:
-            return 'None'
-    return message['result']
+    lock.acquire_read()
+    ret = 'None'
+    if messageId in resultQueue:
+        message = resultQueue[messageId]
+        sqsClient.delete_message(
+            QueueUrl=queue_url,
+            ReceiptHandle=message['receipt_handle']
+        )
+        del resultQueue[messageId]
+        ret = message['result']
+    lock.release_read()
+    return ret
 
 
 def poll_resp_q(queue_url: str, sqsClient) -> str:
@@ -106,15 +108,16 @@ def poll_resp_q(queue_url: str, sqsClient) -> str:
 
             global resultQueue
 
-            with writeLock:
-                for message in response['Messages']:
-                    if 'MessageAttributes' in message:
-                        messageAttr = message['MessageAttributes']
-                        messageId = messageAttr['messageId']['StringValue']
-                        resultQueue[messageId] = {
-                            'result': message['Body'],
-                            'receipt_handle' : message['ReceiptHandle']
-                        }
+            lock.acquire_write()
+            for message in response['Messages']:
+                if 'MessageAttributes' in message:
+                    messageAttr = message['MessageAttributes']
+                    messageId = messageAttr['messageId']['StringValue']
+                    resultQueue[messageId] = {
+                        'result': message['Body'],
+                        'receipt_handle' : message['ReceiptHandle']
+                    }
+            lock.release_read()
             time.sleep(3)
 
 
