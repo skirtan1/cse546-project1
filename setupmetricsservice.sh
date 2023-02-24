@@ -12,8 +12,8 @@ sudo systemctl disable metrics.timer
 sudo systemctl disable metrics.service
 
 # Copy metrics service systemd files to location
-sudo cp custom_metrics.service /lib/systemd/system/
-sudo cp custom_metrics.timer /lib/systemd/system/
+sudo cp metrics.service /lib/systemd/system/
+sudo cp metrics.timer /lib/systemd/system/
 
 # Add required permissions
 sudo chmod u+x /lib/systemd/system/metrics.service
