@@ -1,37 +1,117 @@
 # cse546-project1
-cloud computing project 1
 
-To test with dockerfiles:
+## cloud computing project 1
 
-1. Make at_server (3.0 GB image):
-```
-make at_server
-```
-2. Make wt_server (700 MB image):
-```
-make wt_server
-```
-3. run at_server
-```
-docker run --name at_server -p 8000:8000 at_server:latest
-```
-4. run wt_server
-```
-docker run --name wt_server --link at_server -p 5000:5000 wt_server:latest
-```
-5. use workload generator
+### Group: CCP
 
-use with workload generator:
+#### Team Members
+
+* Gaurav Kulkarni
+* Parth Shah
+* Shreyas Kirtane  -  1225453736
+
+-----
+
+#### Report
+
+link: https://docs.google.com/document/d/1eQ5AvgC0n3BekTS4ZtOBorB4yhmfZ7G9/edit?usp=sharing&ouid=107186202899619445000&rtpof=true&sd=true
+
+-----
+
+##### Gaurav's Tasks:
+
+-----
+
+##### Parth's Tasks:
+
+-----
+
+##### Shreyas's Tasks:
+
+[x] Implement Web Tier using Flask
+[x] Incorporate image classification in app tier server
+[x] Implement multiple reader single writer lock to poll result dict efficiently
+[x] Implement S3 methods to download and upload files
+[x] Create dockerfile, Makefile, configs, venv requirements file
+[x] Figure out deployment
+
+-----
+
+#### AWS Credentials
+
+* user: 
+* password: 
+* aws_access_key_id: 
+* aws_secret_access_key: 
+* default region: us-east-1
+
+-----
+
+#### PEM keys
+
+* app tier (all instances): cse546-project1/app-tier-key.pem
+* web iter: cse546-project1/web-tier-key.pem
+
+Usage:
 ```
- python3 multithread_workload_generator.py \
---num_request 10 \
---url 'http://localhost:5000/classify' \
---image_folder "./imagenet-100/"
+chmod 600 web-tier-key.pem
+ssh -i web-tier-key.pem ec2-user@[public-ip]
 ```
 
-generator here: https://github.com/nehavadnere/CSE546_Sum22_workload_generator
+-----
 
-Tasks:
-- [ ] Implement code to push to sqs
-- [ ] Implement code to poll from sqs
-- [ ] Implement code to write to s3
+#### Web Tier details
+
+* Base AMI: AWS-Linux
+* user: ec2-user
+* ssh-key: cse546-project1/web-tier-key.pem
+* public-ip: assigned when started/launced (see ec2 console)
+
+-----
+
+#### SQS
+
+* request queue: requests
+* request queue url: https://sqs.us-east-1.amazonaws.com/583586231865/requests
+
+* response queue: responses
+* response queue url: https://sqs.us-east-1.amazonaws.com/583586231865/responses
+
+-----
+
+#### S3
+
+* input bucket: cse545images
+* resuls bucket: cse545results
+
+------
+
+#### Deploy on your aws account
+
+1. Create queues and buckets
+2. Create an ec2 instance name "web-instance" and install docker on it.
+3. Configure aws credentials using aws configure or env variables
+4. Clone the git repo and do:
+    ```
+    make run_wt
+    ```
+4. Create an ec2 instance named "app-instance" and install docker.
+5. Configure aws credentials using aws configure or env variables
+6. Clone the git repo and do:
+    ```
+    make run_at
+    ```
+7. Create an AMI out of app-instance.
+8. Create a launch template using this AMI
+9. Create an Alarm based on ApproximateNumberOfVissibleMessages on request queue
+10. Create an AutoScalingGroup with a step policy
+11. Create steps:
+    * set 1 capacity for metric >= 1 and < 2.
+    * set 2 capacity for metric >= 2 and < 3.
+    * ...
+    * ...
+    * set 20 capacity for metric >= 20 and < +ve infinity
+13. Create a simple scale in policy to scale in:
+    configure to remove 20 instances when alarm in OK state
+14. Attach alarm to the scaling policy
+15. Run the workload generator on public ip of web instance
