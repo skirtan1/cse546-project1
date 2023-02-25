@@ -1,6 +1,6 @@
 # cse546-project1
 
-## cloud computing project 1
+## Cloud Computing Project 1
 
 ### Group: CCP
 
@@ -9,12 +9,12 @@
 | Name  | ASU ID  |
 |---|---|
 | Gaurav Kulkarni  |   |
-| Parth Shah |   |
+| Parth Shah | 1225457038 |
 | Shreyas Kirtane | 1225453736 |
 
 -----
 
-> Project [Report](https://docs.google.com/document/d/1eQ5AvgC0n3BekTS4ZtOBorB4yhmfZ7G9/edit?usp=sharing&ouid=107186202899619445000&rtpof=true&sd=true)
+> [Project Report](https://docs.google.com/document/d/1eQ5AvgC0n3BekTS4ZtOBorB4yhmfZ7G9/edit?usp=sharing&ouid=107186202899619445000&rtpof=true&sd=true)
 
 -----
 
@@ -23,6 +23,10 @@
 -----
 
 ##### Parth's Tasks:
+
+- [x] Implement SQS method in web tier to push messages to request queue
+- [x] Implement SQS method in app tier to push results to response queue
+- [x] Add multithreading to app tier and web tier to poll SQS queues in background
 
 -----
 
@@ -39,11 +43,12 @@
 
 #### AWS Credentials
 
-* user: 
-* password: 
-* aws_access_key_id: 
-* aws_secret_access_key: 
+* user: demo
+* password: eKwG9(sU-ZoWpE/\T"i"
+* aws_access_key_id: AKIAYPYDTGY4UM3UQCOJ
+* aws_secret_access_key: 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
 * default region: us-east-1
+* sign-in URL: https://583586231865.signin.aws.amazon.com/console
 
 -----
 
