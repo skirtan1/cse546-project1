@@ -6,15 +6,15 @@
 
 #### Team Members
 
-* Gaurav Kulkarni
-* Parth Shah
-* Shreyas Kirtane  -  1225453736
+| Name  | ASU ID  |
+|---|---|
+| Gaurav Kulkarni  |   |
+| Parth Shah |   |
+| Shreyas Kirtane | 1225453736 |
 
 -----
 
-#### Report
-
-link: https://docs.google.com/document/d/1eQ5AvgC0n3BekTS4ZtOBorB4yhmfZ7G9/edit?usp=sharing&ouid=107186202899619445000&rtpof=true&sd=true
+> Project [Report](https://docs.google.com/document/d/1eQ5AvgC0n3BekTS4ZtOBorB4yhmfZ7G9/edit?usp=sharing&ouid=107186202899619445000&rtpof=true&sd=true)
 
 -----
 
@@ -28,12 +28,12 @@ link: https://docs.google.com/document/d/1eQ5AvgC0n3BekTS4ZtOBorB4yhmfZ7G9/edit?
 
 ##### Shreyas's Tasks:
 
-[x] Implement Web Tier using Flask
-[x] Incorporate image classification in app tier server
-[x] Implement multiple reader single writer lock to poll result dict efficiently
-[x] Implement S3 methods to download and upload files
-[x] Create dockerfile, Makefile, configs, venv requirements file
-[x] Figure out deployment
+- [x] Implement Web Tier using Flask
+- [x] Incorporate image classification in app tier server
+- [x] Implement multiple reader single writer lock to poll result dict efficiently
+- [x] Implement S3 methods to download and upload files
+- [x] Create dockerfile, Makefile, configs, venv requirements file
+- [x] Figure out deployment
 
 -----
 
