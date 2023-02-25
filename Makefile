@@ -40,15 +40,5 @@ clean_images:
 clean:
 	rm -rf at_server wt_server at wt
 
-create_scaling_policy:
-	aws autoscaling put-scaling-policy \
-  		--policy-name sqs-ttsp \
-  		--auto-scaling-group-name App\ Tier \
-  		--policy-type TargetTrackingScaling \
-  		--target-tracking-configuration file://targetconfig.json
-
-setup_metrics:
-	sh setupmetricsservice.sh
-
 .PHONY: clean clean_containers clean_images run_wt run_at
 

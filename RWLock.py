@@ -1,3 +1,5 @@
+# Ref: Python Cookbook, ISBN: 780596001674
+
 import threading
 
 class ReadWriteLock:
