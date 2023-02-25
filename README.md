@@ -86,8 +86,8 @@ ssh -i web-tier-key.pem ec2-user@[public-ip]
 
 #### S3
 
-* input bucket: cse545images
-* resuls bucket: cse545results
+* input bucket: cse546images
+* resuls bucket: cse546results
 
 ------
 
