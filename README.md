@@ -8,7 +8,7 @@
 
 | Name  | ASU ID  |
 |---|---|
-| Gaurav Kulkarni  |   |
+| Gaurav Kulkarni  |  1225477253 |
 | Parth Shah | 1225457038 |
 | Shreyas Kirtane | 1225453736 |
 
@@ -20,7 +20,10 @@
 
 ##### Gaurav's Tasks:
 
------
+- [x] Researched about Amazon Cloudwatch metrics and alarm, Autoscaling groups and scaling policies
+- [x] Tested out different simple step and target tracking policies along with custom metrics
+- [x] Evaluated individual policies against the required time limit and scaling requirements
+- [x] Managed the documentation of the project
 
 ##### Parth's Tasks:
 
