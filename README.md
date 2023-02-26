@@ -25,6 +25,8 @@
 - [x] Evaluated individual policies against the required time limit and scaling requirements
 - [x] Managed the documentation of the project
 
+-----
+
 ##### Parth's Tasks:
 
 - [x] Implement SQS method in web tier to push messages to request queue
