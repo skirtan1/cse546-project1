@@ -49,18 +49,9 @@
 #### AWS Credentials
 
 * user: demo
-* password: eKwG9(sU-ZoWpE/\T"i"
-* aws_access_key_id: AKIAYPYDTGY4UM3UQCOJ
-* aws_secret_access_key: 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
 * default region: us-east-1
-* sign-in URL: https://583586231865.signin.aws.amazon.com/console
 
 -----
-
-#### PEM keys
-
-* app tier (all instances): cse546-project1/app-tier-key.pem
-* web iter: cse546-project1/web-tier-key.pem
 
 Usage:
 ```
@@ -74,7 +65,6 @@ ssh -i web-tier-key.pem ec2-user@[public-ip]
 
 * Base AMI: AWS-Linux
 * user: ec2-user
-* ssh-key: cse546-project1/web-tier-key.pem
 * public-ip: assigned when started/launced (see ec2 console)
 
 -----
